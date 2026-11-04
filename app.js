@@ -687,10 +687,13 @@ Responda ESTRITAMENTE em formato JSON puro, sem blocos markdown extras, seguindo
     animateCounter(resTotalScore, data.total_score);
     resGradeLevel.textContent = data.grade_level;
     resThemeSubtitle.textContent = `Tema: ${themeTitle}`;
-    // Garantia de saudacao personalizada da Lari por pontuacao
-    let msgLari = (data.personal_message || '').replace(/sophie/gi, 'Lari').replace(/sabrina sato/gi, 'gatinha ruiva');
-    // Remove saudacoes antigas do inicio para nao duplicar
-    msgLari = msgLari.replace(/^(olá|oi|eae|boa|parabéns|olá,?\s*lari!?|eae\s*lari,?)[\s!,.]*/i, '').trim();
+    // Limpeza estrita e saudacao para Lari
+    let msgLari = String(data.personal_message || '');
+    // Remove qualquer mencao a outros nomes
+    msgLari = msgLari.split(/sophie/i).join('Lari');
+    msgLari = msgLari.split(/sabrina sato/i).join('gatinha ruiva');
+    // Remove saudacao inicial do modelo (ex: Parabens, Sophie! / Ola, Lari!)
+    msgLari = msgLari.replace(/^[^.!?:]*?[!?:.]\s*/i, '').trim();
     if (data.total_score >= 700) {
       resPersonalMessage.textContent = "Boa gatinha ruiva!! " + msgLari;
     } else {
