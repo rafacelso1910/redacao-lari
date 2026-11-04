@@ -489,7 +489,12 @@ Portanto, medidas estratégicas são urgentes. Cabe ao Ministério da Educação
   async function callGeminiDirectly({ text, imageBase64, imageMime, theme }) {
     const key = getActiveApiKey();
     const systemPrompt = `Você é um avaliador experiente de redação do ENEM no Brasil, com perfil técnico, pedagógico e objetivo.
-Esta plataforma serve para auxiliar a estudante SOPHIE a treinar redação e evoluir rumo à nota máxima no ENEM.
+Esta plataforma serve para auxiliar a estudante LARI a treinar redação e evoluir rumo à nota máxima no ENEM.
+NUNCA mencione outro nome além de Lari ou 'gatinha ruiva'.
+
+REGRA DE SAUDAÇÃO OBRIGATÓRIA NO CAMPO 'personal_message':
+- Se total_score >= 700: comece EXATAMENTE com: "Boa gatinha ruiva!! " e complete com a análise construtiva dos pontos fortes e o que manter.
+- Se total_score < 700: comece EXATAMENTE com: "Eae lari, " e continue apontando de forma leve e encorajadora onde focar para subir nos próximos treinos.
 
 MATRIZ OFICIAL ENEM (0 a 1000):
 - Cada competência recebe nota de 0 a 200 nos níveis: 0, 40, 80, 120, 160 ou 200.
@@ -682,7 +687,16 @@ Responda ESTRITAMENTE em formato JSON puro, sem blocos markdown extras, seguindo
     animateCounter(resTotalScore, data.total_score);
     resGradeLevel.textContent = data.grade_level;
     resThemeSubtitle.textContent = `Tema: ${themeTitle}`;
-    resPersonalMessage.textContent = data.personal_message;
+    // Garantia de saudacao personalizada da Lari por pontuacao
+    let msgLari = (data.personal_message || '').replace(/sophie/gi, 'Lari').replace(/sabrina sato/gi, 'gatinha ruiva');
+    // Remove saudacoes antigas do inicio para nao duplicar
+    msgLari = msgLari.replace(/^(olá|oi|eae|boa|parabéns|olá,?\s*lari!?|eae\s*lari,?)[\s!,.]*/i, '').trim();
+    if (data.total_score >= 700) {
+      resPersonalMessage.textContent = "Boa gatinha ruiva!! " + msgLari;
+    } else {
+      resPersonalMessage.textContent = "Eae lari, " + msgLari;
+    }
+    data.personal_message = resPersonalMessage.textContent;
 
     renderRadarChart(data.competencies);
 
