@@ -490,7 +490,7 @@ Portanto, medidas estratégicas são urgentes. Cabe ao Ministério da Educação
     const key = getActiveApiKey();
     const systemPrompt = `Você é um avaliador experiente de redação do ENEM no Brasil, com perfil técnico, pedagógico e objetivo.
 Esta plataforma serve para auxiliar a estudante LARI a treinar redação e evoluir rumo à nota máxima no ENEM.
-NUNCA mencione outro nome além de Lari ou 'gatinha ruiva'.
+Use somente o nome Lari (ou o apelido 'gatinha ruiva') e não cite o nome de nenhuma outra pessoa.
 
 REGRA DE SAUDAÇÃO OBRIGATÓRIA NO CAMPO 'personal_message':
 - Se total_score >= 700: comece EXATAMENTE com: "Boa gatinha ruiva!! " e complete com a análise construtiva dos pontos fortes e o que manter.
@@ -675,7 +675,21 @@ Responda ESTRITAMENTE em formato JSON puro, sem blocos markdown extras, seguindo
   });
 
   // 11. Renderização dos Resultados
+  // Limpeza geral: troca nomes de outras pessoas em TODOS os textos da análise
+  const NOME_OUTRA_PESSOA = /\bsophie+\b|\bsabrina(?: sato)?\b/gi;
+  function limparNomes(valor) {
+    if (typeof valor === 'string') return valor.replace(NOME_OUTRA_PESSOA, 'Lari');
+    if (Array.isArray(valor)) return valor.map(limparNomes);
+    if (valor && typeof valor === 'object') {
+      const out = {};
+      for (const k of Object.keys(valor)) out[k] = limparNomes(valor[k]);
+      return out;
+    }
+    return valor;
+  }
+
   function displayResults(data, themeTitle) {
+    data = limparNomes(data);
     lastAnalysisResult = { ...data, theme: themeTitle, timestamp: new Date().toISOString() };
 
     resultsSection.classList.remove('hidden');
@@ -687,13 +701,9 @@ Responda ESTRITAMENTE em formato JSON puro, sem blocos markdown extras, seguindo
     animateCounter(resTotalScore, data.total_score);
     resGradeLevel.textContent = data.grade_level;
     resThemeSubtitle.textContent = `Tema: ${themeTitle}`;
-    // Limpeza estrita e saudacao para Lari
+    // Saudação fixa por nota; só tira a saudação do modelo se ela realmente for uma saudação
     let msgLari = String(data.personal_message || '');
-    // Remove qualquer mencao a outros nomes
-    msgLari = msgLari.split(/sophie/i).join('Lari');
-    msgLari = msgLari.split(/sabrina sato/i).join('gatinha ruiva');
-    // Remove saudacao inicial do modelo (ex: Parabens, Sophie! / Ola, Lari!)
-    msgLari = msgLari.replace(/^[^.!?:]*?[!?:.]\s*/i, '').trim();
+    msgLari = msgLari.replace(/^\s*(?:oi|ol[aá]|eae|e a[ií]|boa|parab[eé]ns|querid[oa]|lari)\b[^.!?:\n]{0,60}[!?:.,]+\s*/i, '').trim();
     if (data.total_score >= 700) {
       resPersonalMessage.textContent = "Boa gatinha ruiva!! " + msgLari;
     } else {
